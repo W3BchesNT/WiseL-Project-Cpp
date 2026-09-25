@@ -16,6 +16,7 @@ enum class TokenType {
     MUT,
     COLON,
     ASSIGN,
+    STATIC,
 
     LPAREN,
     RPAREN,
@@ -38,13 +39,17 @@ enum class TokenType {
     EQ,
     PLUSPLUS,
     ARGS,
-    DOTDOTDOT,
     AT_ARGS,
     DOT,
 
     USELIB,
     
+    DIV,
+    MOD,
     
+    ARROW,
+    
+    RETURN,
     END
 };
 

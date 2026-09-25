@@ -1,6 +1,9 @@
 @echo off
-set INCLUDE=kernel\FASM\FASM-WINDOWS\INCLUDE
+setlocal
 
+set "INCLUDE=kernel\FASM\fasm2\include"
+
+echo [1/4] Running WiseL compiler...
 wiselc.exe
 if %errorlevel% neq 0 (
     echo [ERROR] WiseL compiler failed
@@ -8,14 +11,18 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-kernel\FASM\FASM-WINDOWS\fasm.exe out.asm main.exe
+echo [2/4] Running FASM 2 (fasmg) with fasm2.inc header...
+
+kernel\FASM\fasm2\fasmg.exe -i "include 'fasm2.inc'" out.asm main.exe
 if %errorlevel% neq 0 (
-    echo [ERROR] FASM failed
+    echo [ERROR] FASM 2 compilation failed
     pause
     exit /b 1
 )
 
+echo [3/4] Build successful! Running main.exe:
 echo ==========================================
 main.exe
 echo ==========================================
 pause
+endlocal

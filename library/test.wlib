@@ -1,0 +1,136 @@
+Format "PE64 Console"
+
+@include.inc {
+    "win64w.inc"
+}
+
+@library kernel32 {
+    GetStdHandle
+    WriteConsoleA
+    ReadConsoleA
+    ReadConsoleW
+    FlushConsoleInputBuffer
+    WideCharToMultiByte
+    lstrlenA
+    SetConsoleOutputCP
+    ExitProcess
+}
+
+static hStdOut: i64
+static hStdIn: i64
+static written: i32
+static readLen: i32
+static newline: str = "\r\n"
+static readBuffer: i8 = [512]
+static tempWide: i16 = [256]
+static numBuffer: i8 = [32]
+static bytesWritten: u32 = 0
+static charsRead: u32 = 0
+static buf1: i8 = [512]
+static buf2: i8 = [512]
+static buf3: i8 = [512]
+
+func GetStdHandle() {
+    asm {
+        sub rsp, 40
+        invoke GetStdHandle, -11
+        mov [hStdOut], rax
+        invoke GetStdHandle, -10
+        mov [hStdIn], rax
+        add rsp, 40
+    }
+}
+
+func ExitProcess() {
+    asm {
+        invoke ExitProcess, 0
+    }
+}
+
+func strlen(str text) -> u32 {
+    asm {
+        sub rsp, 40
+        invoke lstrlenA, rcx
+        add rsp, 40
+    }
+}
+
+func atoi(str text) -> i32 {
+    asm {
+        sub rsp, 40
+        mov rsi, rcx
+        xor eax, eax
+        xor ecx, ecx
+      .atoi_loop:
+        mov cl, byte [rsi]
+        test cl, cl
+        jz .atoi_end
+        cmp cl, '0'
+        jl .atoi_end
+        cmp cl, '9'
+        jg .atoi_end
+        sub cl, '0'
+        imul eax, 10
+        add eax, ecx
+        inc rsi
+        jmp .atoi_loop
+      .atoi_end:
+        add rsp, 40
+    }
+}
+
+func print_int(i32 num) {
+    asm {
+        sub rsp, 40
+        push rbx
+        push r12
+        mov eax, ecx
+        xor r12d, r12d
+        test eax, eax
+        jns .pi_pos
+        neg eax
+        mov r12d, 1
+      .pi_pos:
+        lea rbx, [numBuffer + 32]
+        dec rbx
+        mov byte [rbx], 0
+      .pi_div:
+        xor edx, edx
+        mov ecx, 10
+        div ecx
+        add dl, '0'
+        dec rbx
+        mov byte [rbx], dl
+        test eax, eax
+        jnz .pi_div
+        test r12d, r12d
+        jz .pi_write
+        dec rbx
+        mov byte [rbx], '-'
+      .pi_write:
+        lea r8, [numBuffer + 32]
+        sub r8, rbx
+        invoke WriteConsoleA, [hStdOut], rbx, r8, bytesWritten, 0
+        pop r12
+        pop rbx
+        add rsp, 40
+    }
+}
+
+func WriteConsole(i64 hConsole, str text, u32 len, *u32 bytesWritten) {
+    asm {
+        sub rsp, 40
+        invoke WriteConsoleA, rcx, rdx, r8, r9, 0
+        add rsp, 40
+    }
+}
+
+func printf(str text) {
+    let len: u32 = strlen(text)
+    WriteConsole(hStdOut, text, len, &bytesWritten)
+}
+
+func scanf(str buf) -> str {
+    ReadConsoleA(hStdIn, buf, 511, &charsRead, 0)
+    return buf
+}

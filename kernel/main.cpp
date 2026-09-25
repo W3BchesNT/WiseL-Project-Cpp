@@ -54,7 +54,7 @@ int main() {
         }
     }
 
-    // 3.2 Выводим список функций
+    // 3.2 Displaying the function list
     for (const auto& node : final_ast) {
         if (node.type == NodeType::FUNC_DEF) {
             cout << "  func " << node.value << "(";
